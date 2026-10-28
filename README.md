@@ -15,10 +15,10 @@
 - Docker и Docker Compose
 
 ## 🚀 Сборка и запуск
-
+docker compose up -d
 Для сборки и запуска всех сервисов (приложение и Kafka) одной командой:
 ```bash
-docker compose up -d
+
 
 ## 🔄 Входные и выходные данные
 
