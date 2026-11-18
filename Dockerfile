@@ -1,18 +1,31 @@
-# ЭТАП 1: Сборка
-FROM maven:3.9-eclipse-temurin-21 AS build
+# Первый этап сборки компилирует код
+FROM maven:3.9-eclipse-temurin-21 AS builder
+
 WORKDIR /app
+
 COPY pom.xml .
-RUN mvn dependency:go-offline -B
+
+# Кэшируем локальный репозиторий Maven
+RUN --mount=type=cache,target=/root/.m2/repository \
+    mvn dependency:go-offline
+
+
 COPY src ./src
-RUN mvn clean package -DskipTests -B
 
-# ЭТАП 2: Запуск
-FROM eclipse-temurin:21-jre-alpine
+# Собираем приложение с использованием кэша зависимостей
+RUN --mount=type=cache,target=/root/.m2/repository \
+    mvn package -DskipTests
+
+
+
+# Второй этап сборки запускает jar-ник
+FROM eclipse-temurin:21-jre
+
 WORKDIR /app
-# Создаем пользователя для безопасности
-RUN addgroup -S spring && adduser -S spring -G spring
-USER spring
 
-COPY --from=build /app/target/*.jar app.jar
+COPY --from=builder /app/target/*.jar app.jar
+
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "app.jar"]
+
+# Команды, которые выполняются при старте контейнера
+CMD ["java", "-jar", "app.jar"]
